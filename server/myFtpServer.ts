@@ -2,7 +2,22 @@ import * as net from "net"
 import messages from "./messages"
 import { spawn } from "child_process"
 import path from "path"
-import fs from 'fs'
+import Command from "./commands/base_cmd"
+import userCommand from './commands/user'
+import passCommand from './commands/pass'
+import systCommand from './commands/syst'
+import featCommand from './commands/feat'
+import pwdCommand from './commands/pwd'
+import typeCommand from './commands/type'
+import epsvCommand from './commands/epsv'
+import statCommand from './commands/stat'
+import portCommand from './commands/port'
+import eprtCommand from './commands/eprt'
+import listCommand from './commands/list'
+import cwdCommand from './commands/cwd'
+import cdupCommand from './commands/cdup'
+import storCommand from './commands/stor'
+import retrCommand from './commands/retr'
 
 const PORT = !process.argv[2] ? 4321 : parseInt(process.argv[2])
 const asciiEncoding = "utf8"
@@ -56,11 +71,28 @@ const server = net.createServer((socket) => {
     console.log("RESPONSE: " + status + ' ' + message + '\r\n');
   }
 
-  const dataTransfert = (data: string) => {
+  /**
+   * Create data transfert socket
+   */
+  const dataTransfert = (
+    onConnect?: (dataSocket: net.Socket, onDone: () => void) => void,
+    onData?: (data: Buffer, onDone: () => void) => void,
+    onEnd?: (onDone: () => void) => void
+  ) => {
     let dataSocket = net.createConnection(port, host)
+
+    const done = () => {
+      dataSocket.end()
+      reply(226)
+    }
+
     dataSocket.on('connect', () => {
       reply(150)
-      dataSocket.write(data + '\r\n', () => dataSocket.end(() => reply(226)))
+      if (onConnect) onConnect(dataSocket, done)
+    }).on('data', data => {
+      if (onData) onData(data, done)
+    }).on('end', () => {
+      if (onEnd) onEnd(done)
     })
   }
 
@@ -68,70 +100,42 @@ const server = net.createServer((socket) => {
     const command = data.toString().trim()
     console.log(command);
 
+    let cmdExecuter: Command
+
     if (command.startsWith('USER ')) {
-      reply(331)
+      cmdExecuter = userCommand
     } else if (command.startsWith('PASS ')) {
-      reply(230)
+      cmdExecuter = passCommand
     } else if (command.startsWith('SYST')) {
-      reply(215)
+      cmdExecuter = systCommand
     } else if (command.startsWith('FEAT')) {
-      socket.write('211-Extensions supported\r\n')
-      reply(211, 'End')
+      cmdExecuter = featCommand
     } else if (command.startsWith('PWD')) {
-      reply(257, pwd)
+      cmdExecuter = pwdCommand
     } else if (command.startsWith('TYPE')) {
-      const type = command.split(' ')[1].trim()
-      if ((type === "A" || type === "I")) {
-        dataEncoding = type === "A" ? asciiEncoding : binaryEncoding
-        reply(200)
-      } else {
-        reply(501)
-      }
+      cmdExecuter = typeCommand
     } else if (command.startsWith('EPSV')) {
-      reply(229)
+      cmdExecuter = epsvCommand
     } else if (command.startsWith('STAT')) {
-      reply(202)
+      cmdExecuter = statCommand
     } else if (command.startsWith('PORT')) {
-      reply(202)
+      cmdExecuter = portCommand
     } else if (command.startsWith('EPRT')) {
-      const values = command.replace('EPRT |', '').split('|')
-      host = values[1]
-      port = parseInt(values[2])
-      reply(200)
+      cmdExecuter = eprtCommand
     } else if (command.startsWith('LIST')) {
-      listFiles(dataTransfert)
+      cmdExecuter = listCommand
     } else if (command.startsWith('CWD')) {
-      pwd = _resolvePath(command.split(' ')[1])
-      reply(250, 'Directory changed to "' + pwd + '"')
+      cmdExecuter = cwdCommand
     } else if (command.startsWith('CDUP')) {
-      pwd = path.resolve(pwd, '../')
-      reply(250, 'Directory changed to "' + pwd + '"')
+      cmdExecuter = cdupCommand
     } else if (command.startsWith('STOR')) {
-      const fileName = command.split(' ')[1]
-
-      let writeStream = fs.createWriteStream(path.join(pwd, fileName));
-
-      let dataSocket = net.createConnection(port, host)
-      dataSocket.on('connect', () => {
-        reply(150)
-      }).on('data', data => {
-        const fileContent = data.toString()
-        writeStream.write(fileContent)
-      }).on('end', () => {
-        writeStream.end()
-        reply(226)
-      })
+      cmdExecuter = storCommand
     } else if (command.startsWith('RETR')) {
-      const fileName = command.split(' ')[1]
-
-      let fileContent: string = fs.readFileSync(path.join(pwd, fileName)).toString();
-
-      let dataSocket = net.createConnection(port, host)
-      dataSocket.on('connect', () => {
-        reply(150)
-        dataSocket.write(fileContent, () => dataSocket.end(() => reply(226)))
-      })
+      cmdExecuter = retrCommand
     }
+
+    if (cmdExecuter)
+      cmdExecuter.run(command, socket, reply)
   })
 
   reply(220) // Welcome response

@@ -1,5 +1,5 @@
 {
-  "name": "myFtp",
+  "name": "myftp",
   "version": "1.0.0",
   "main": "dist/myFtpServer.js",
   "authors": [

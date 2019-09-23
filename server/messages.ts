@@ -24,6 +24,7 @@ class Message {
         this.message = message
     }
 }
+
 const messages: Messages = new Messages([
     new Message(200, "Command okay."),
     new Message(500, "Syntax error, command unrecognized."), // This may include errors such as command line too long.
