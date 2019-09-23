@@ -2,6 +2,7 @@ import * as net from "net"
 import messages from "./messages"
 import { spawn } from "child_process"
 import path from "path"
+import fs from 'fs'
 
 const PORT = !process.argv[2] ? 4321 : parseInt(process.argv[2])
 const asciiEncoding = "utf8"
@@ -18,8 +19,6 @@ const _resolvePath = (pathArg = '.') => {
 }
 
 const listFiles = (callback: (result?: string) => void) => {
-  console.log(pwd);
-  
   let ls = spawn('ls', ['-l', pwd])
   let result = ''
   ls.stdout.setEncoding(dataEncoding)
@@ -107,8 +106,32 @@ const server = net.createServer((socket) => {
     } else if (command.startsWith('CDUP')) {
       pwd = path.resolve(pwd, '../')
       reply(250, 'Directory changed to "' + pwd + '"')
-    }
+    } else if (command.startsWith('STOR')) {
+      const fileName = command.split(' ')[1]
 
+      let writeStream = fs.createWriteStream(path.join(pwd, fileName));
+
+      let dataSocket = net.createConnection(port, host)
+      dataSocket.on('connect', () => {
+        reply(150)
+      }).on('data', data => {
+        const fileContent = data.toString()
+        writeStream.write(fileContent)
+      }).on('end', () => {
+        writeStream.end()
+        reply(226)
+      })
+    } else if (command.startsWith('RETR')) {
+      const fileName = command.split(' ')[1]
+
+      let fileContent: string = fs.readFileSync(path.join(pwd, fileName)).toString();
+
+      let dataSocket = net.createConnection(port, host)
+      dataSocket.on('connect', () => {
+        reply(150)
+        dataSocket.write(fileContent, () => dataSocket.end(() => reply(226)))
+      })
+    }
   })
 
   reply(220) // Welcome response
