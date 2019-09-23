@@ -1,19 +1,28 @@
 import * as net from "net"
-import fs from 'fs'
 import messages from "./messages"
 import { spawn } from "child_process"
-import { join } from "path"
+import path from "path"
 
 const PORT = !process.argv[2] ? 4321 : parseInt(process.argv[2])
-const dataEncoding = "binary"
 const asciiEncoding = "utf8"
-let passive = false
-let queue = []
+const binaryEncoding = "binary"
+let dataEncoding = binaryEncoding
+let pwd = process.cwd()
+
+const _resolvePath = (pathArg = '.') => {
+  if (path.isAbsolute(pathArg)) {
+    return path.join(pathArg);
+  } else {
+    return path.join(pwd, pathArg);
+  }
+}
 
 const listFiles = (callback: (result?: string) => void) => {
-  let ls = spawn('ls', ['-l', __dirname])
+  console.log(pwd);
+  
+  let ls = spawn('ls', ['-l', pwd])
   let result = ''
-  // ls.stdout.setEncoding(self.encoding)
+  ls.stdout.setEncoding(dataEncoding)
   ls.stdout.on('data', (chunk) => {
     result += chunk.toString()
   })
@@ -45,6 +54,7 @@ const server = net.createServer((socket) => {
     if (socket.writable) {
       socket.write(status + ' ' + message + '\r\n', callback)
     }
+    console.log("RESPONSE: " + status + ' ' + message + '\r\n');
   }
 
   const dataTransfert = (data: string) => {
@@ -56,37 +66,49 @@ const server = net.createServer((socket) => {
   }
 
   socket.on("data", (data: Buffer) => {
-    const command = data.toString()
+    const command = data.toString().trim()
     console.log(command);
 
-
-    if (command.startsWith('USER '))
+    if (command.startsWith('USER ')) {
       reply(331)
-    else if (command.startsWith('PASS '))
+    } else if (command.startsWith('PASS ')) {
       reply(230)
-    else if (command.startsWith('SYST'))
+    } else if (command.startsWith('SYST')) {
       reply(215)
-    else if (command.startsWith('FEAT')) {
+    } else if (command.startsWith('FEAT')) {
       socket.write('211-Extensions supported\r\n')
-      // No feature
       reply(211, 'End')
     } else if (command.startsWith('PWD')) {
-      reply(257, "/Users/podpak/Projects/myFtp")
-    } else if (command.startsWith('TYPE ')) {
+      reply(257, pwd)
+    } else if (command.startsWith('TYPE')) {
       const type = command.split(' ')[1].trim()
-      reply((type === "A" || type === "I") ? 200 : 501)
+      if ((type === "A" || type === "I")) {
+        dataEncoding = type === "A" ? asciiEncoding : binaryEncoding
+        reply(200)
+      } else {
+        reply(501)
+      }
     } else if (command.startsWith('EPSV')) {
+      reply(229)
+    } else if (command.startsWith('STAT')) {
+      reply(202)
+    } else if (command.startsWith('PORT')) {
       reply(202)
     } else if (command.startsWith('EPRT')) {
       const values = command.replace('EPRT |', '').split('|')
       host = values[1]
       port = parseInt(values[2])
-      console.log(host, port);
-      reply(202)
-
+      reply(200)
     } else if (command.startsWith('LIST')) {
       listFiles(dataTransfert)
+    } else if (command.startsWith('CWD')) {
+      pwd = _resolvePath(command.split(' ')[1])
+      reply(250, 'Directory changed to "' + pwd + '"')
+    } else if (command.startsWith('CDUP')) {
+      pwd = path.resolve(pwd, '../')
+      reply(250, 'Directory changed to "' + pwd + '"')
     }
+
   })
 
   reply(220) // Welcome response
