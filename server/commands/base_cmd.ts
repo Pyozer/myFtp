@@ -1,8 +1,6 @@
-import { Socket } from 'net'
+import { SocketInfo } from '../myFtpServer'
 
-type Reply = (status: number, message?: string, callback?: (err?: Error) => void) => void
-
-type Execute = (arg: string, socket: Socket, reply: Reply) => void
+type Execute = (arg: string, socketInfo: SocketInfo) => void
 
 class Command {
     pattern: string
@@ -13,8 +11,8 @@ class Command {
         this.execute = execute
     }
 
-    run(command: string, socket: Socket, reply: Reply) {
-        this.execute(command.replace(this.pattern, '').trim(), socket, reply)
+    run(command: string, socketInfo: SocketInfo) {
+        this.execute(command.replace(this.pattern, '').trim(), socketInfo)
     }
 
     isMatch(command: string): boolean {

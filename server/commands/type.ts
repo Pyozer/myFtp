@@ -1,10 +1,11 @@
 import Command from "./base_cmd"
+import { asciiEncoding, binaryEncoding } from "../myFtpServer"
 
-export default new Command('TYPE', (arg, socket, reply) => {
+export default new Command('TYPE', (arg, socketInfo) => {
     if ((arg === "A" || arg === "I")) {
-        dataEncoding = arg === "A" ? asciiEncoding : binaryEncoding // TODO: Use global variables
-        reply(200)
+        socketInfo.dataEncoding = arg === "A" ? asciiEncoding : binaryEncoding
+        socketInfo.reply(200)
     } else {
-        reply(501)
+        socketInfo.reply(501)
     }
 });

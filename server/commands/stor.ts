@@ -1,11 +1,13 @@
-import Command from "./base_cmd"
 import fs from 'fs'
 import path from 'path'
+import Command from "./base_cmd"
 
-export default new Command('STOR', (arg, socket, reply) => {
-    let writeStream = fs.createWriteStream(path.join(pwd, arg));
+export default new Command('STOR', (arg, socketInfo) => {
+    let writeStream = fs.createWriteStream(
+        path.join(socketInfo.currPath, arg)
+    );
 
-    dataTransfert(null, (data, done) => {
+    socketInfo.dataTransfert(null, (data, done) => {
         writeStream.write(data)
         done()
     })

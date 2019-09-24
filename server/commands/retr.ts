@@ -2,10 +2,12 @@ import fs from 'fs'
 import path from 'path'
 import Command from "./base_cmd"
 
-export default new Command('RETR', (arg, socket, reply) => {
-    let fileContent: string = fs.readFileSync(path.join(pwd, arg)).toString();
+export default new Command('RETR', (arg, socketInfo) => {
+    let fileContent: string = fs.readFileSync(
+        path.join(socketInfo.currPath, arg)
+    ).toString();
 
-    dataTransfert((dataSocket, done) => {
+    socketInfo.dataTransfert((dataSocket, done) => {
         dataSocket.write(fileContent)
         done()
     })

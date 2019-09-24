@@ -1,5 +1,5 @@
 import Command from "./base_cmd"
 
-export default new Command('PASS', (arg, socket, reply) => {
-    reply(230)
+export default new Command('PASS', (arg, socketInfo) => {
+    socketInfo.reply(230)
 })
