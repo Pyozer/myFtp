@@ -16,7 +16,7 @@ class Command {
     }
 
     isMatch(command: string): boolean {
-        return command.trim().startsWith(this.pattern)
+        return (command.trim() + ' ').startsWith(this.pattern + ' ')
     }
 }
 

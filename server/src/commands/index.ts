@@ -5,8 +5,6 @@ import featCommand from './feat'
 import pwdCommand from './pwd'
 import typeCommand from './type'
 import epsvCommand from './epsv'
-import statCommand from './stat'
-import portCommand from './port'
 import eprtCommand from './eprt'
 import listCommand from './list'
 import cwdCommand from './cwd'
@@ -22,8 +20,6 @@ const allCommands = [
     pwdCommand,
     typeCommand,
     epsvCommand,
-    statCommand,
-    portCommand,
     eprtCommand,
     listCommand,
     cwdCommand,

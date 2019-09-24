@@ -1,0 +1,20 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended"
+    ],
+    "rules": {
+        "trailing-comma": [
+            false
+        ],
+        "semicolon": [
+            true,
+            "never",
+            "ignore-bound-class-methods"
+        ],
+        "object-literal-sort-keys": false,
+        "no-console": false,
+        "no-var-requires": false
+    },
+    "rulesDirectory": []
+}

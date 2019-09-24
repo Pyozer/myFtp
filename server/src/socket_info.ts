@@ -16,7 +16,7 @@ export default class SocketInfo {
         this.currPath = currPath
     }
 
-    get dataEncoding() : string { return this._dataEncoding }
+    get dataEncoding(): string { return this._dataEncoding }
 
     setBinaryEncoding() {
         this._dataEncoding = binaryEncoding
@@ -49,16 +49,17 @@ export default class SocketInfo {
 
         const done = () => {
             dataSocket.end()
-            this.reply(226)
         }
 
         dataSocket.on('connect', () => {
-            this.reply(150)
-            if (onConnect) onConnect(dataSocket, done)
+            this.reply(150, null, () => {
+                if (onConnect) onConnect(dataSocket, done)
+            })
         }).on('data', data => {
             if (onData) onData(data, done)
         }).on('end', () => {
             if (onEnd) onEnd(done)
+            this.reply(226)
         })
     }
 }
