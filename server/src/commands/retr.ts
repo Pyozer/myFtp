@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import Command from './base_cmd'
 
-export default new Command('RETR', (arg, socketInfo) => {
+export default new Command('RETR', true, (arg, socketInfo) => {
     let fileContent: string = fs.readFileSync(
         path.join(socketInfo.currPath, arg)
     ).toString();

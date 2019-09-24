@@ -1,5 +1,5 @@
 import { Socket, createConnection } from 'net'
-import messages from './messages'
+import messages from './data/messages'
 
 const asciiEncoding = "utf8"
 const binaryEncoding = "binary"
@@ -9,12 +9,16 @@ export default class SocketInfo {
     host: string
     port: number
     currPath: string
+    user: string
+    isPassOk: boolean = false
     private _dataEncoding: string
 
     constructor(socket: Socket, currPath: string) {
         this.socket = socket
         this.currPath = currPath
     }
+
+    get isAuth(): boolean { return this.user != null && this.isPassOk }
 
     get dataEncoding(): string { return this._dataEncoding }
 

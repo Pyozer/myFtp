@@ -1,6 +1,6 @@
 import Command from './base_cmd'
 
-export default new Command('EPRT', (arg, socketInfo) => {
+export default new Command('EPRT', true, (arg, socketInfo) => {
     const values = arg.split('|') // Format: |<number>|<host>|<port>|
     
     socketInfo.host = values[2]

@@ -5,9 +5,11 @@ type Execute = (arg: string, socketInfo: SocketInfo) => void
 class Command {
     pattern: string
     execute: Execute
+    needAuth: boolean
 
-    constructor(pattern: string, execute: Execute) {
+    constructor(pattern: string, needAuth: boolean, execute: Execute) {
         this.pattern = pattern
+        this.needAuth = needAuth
         this.execute = execute
     }
 

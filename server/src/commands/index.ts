@@ -11,6 +11,7 @@ import cwdCommand from './cwd'
 import cdupCommand from './cdup'
 import storCommand from './stor'
 import retrCommand from './retr'
+import portCommand from './port'
 
 const allCommands = [
     userCommand,
@@ -26,6 +27,7 @@ const allCommands = [
     cdupCommand,
     storCommand,
     retrCommand,
+    portCommand,
 ]
 
 export default allCommands

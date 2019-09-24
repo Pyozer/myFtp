@@ -14,6 +14,13 @@ export const handleRequest = (command: string, socketInfo: SocketInfo) => {
         }
     }
 
-    if (!cmdExecuter) socketInfo.reply(202)
-    else cmdExecuter.run(command, socketInfo)
+    if (!cmdExecuter) {
+        socketInfo.reply(202)
+    } else {
+        if (cmdExecuter.needAuth == false || (cmdExecuter.needAuth && socketInfo.isAuth)) {
+            cmdExecuter.run(command, socketInfo)
+        } else {
+            socketInfo.reply(530)
+        }
+    }
 }
