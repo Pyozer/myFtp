@@ -14,8 +14,7 @@ const server = net.createServer((socket) => {
   socket.setNoDelay()
 
   socket.on("data", (data: Buffer) => {
-    const command = data.toString().trim()
-    handleRequest(command, socketInfo)
+    handleRequest(data.toString().trim(), socketInfo)
   })
 
   socketInfo.reply(220) // Welcome response
