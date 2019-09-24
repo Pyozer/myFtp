@@ -1,8 +1,8 @@
-import Command from "./base_cmd"
+import Command from './base_cmd'
 
 export default new Command('TYPE', (arg, socketInfo) => {
-    if ((arg === "A" || arg === "I")) {
-        if (arg === "A")
+    if ((arg === 'A' || arg === 'I')) {
+        if (arg === 'A')
             socketInfo.setAsciiEncoding()
         else
             socketInfo.setBinaryEncoding()

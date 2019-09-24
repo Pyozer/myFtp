@@ -8,7 +8,7 @@ export const handleRequest = (command: string, socketInfo: SocketInfo) => {
     let cmdExecuter: Command
 
     for (let cmd of allCommands) {
-        if (command.startsWith(cmd.pattern)) {
+        if (cmd.isMatch(command)) {
             cmdExecuter = cmd
             break;
         }

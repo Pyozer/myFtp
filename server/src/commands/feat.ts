@@ -1,4 +1,4 @@
-import Command from "./base_cmd"
+import Command from './base_cmd'
 
 export default new Command('FEAT', (arg, socketInfo) => {
     socketInfo.socket.write('211-Extensions supported\r\n')
