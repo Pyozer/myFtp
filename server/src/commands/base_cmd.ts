@@ -1,4 +1,4 @@
-import { SocketInfo } from '../myFtpServer'
+import SocketInfo from '../socket_info'
 
 type Execute = (arg: string, socketInfo: SocketInfo) => void
 

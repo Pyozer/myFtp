@@ -1,5 +1,5 @@
 import path from 'path';
-import { spawn } from "child_process";
+import { spawn } from 'child_process';
 
 export const addToPath = (currPath: string, pathArg: string) => {
     if (path.isAbsolute(pathArg)) {

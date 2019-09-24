@@ -1,5 +1,5 @@
-import Command from "./base_cmd"
-import { addToPath } from "../fs_util"
+import Command from './base_cmd'
+import { addToPath } from '../fs_util'
 
 export default new Command('CWD', (arg, socketInfo) => {
     socketInfo.currPath = addToPath(socketInfo.currPath, arg)
