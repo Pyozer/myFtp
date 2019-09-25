@@ -51,6 +51,7 @@ export default class SocketInfo {
     ) {
         this.reply(150)
         let dataSocket = createConnection(this.port, this.host)
+        dataSocket.setTimeout(0)
 
         const done = () => {
             dataSocket.end()

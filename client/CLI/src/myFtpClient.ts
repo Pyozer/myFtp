@@ -1,4 +1,4 @@
-import { createWriteStream, readFileSync } from "fs"
+import { createWriteStream, createReadStream } from "fs"
 import * as net from "net"
 
 if (process.argv.length < 4) { throw new Error("You must provide host and port in arguments !") }
@@ -76,7 +76,9 @@ process.openStdin().addListener("data", (stdin) => {
 
   if (input === "LIST") {
     openDataServer(
-      () => { client.write("LIST\r\n") },
+      () => {
+        client.write("LIST\r\n")
+      },
       null,
       (_, __, onDone) => {
         onDone()
@@ -85,15 +87,21 @@ process.openStdin().addListener("data", (stdin) => {
   } else if (input.startsWith("STOR ")) {
     const fileName = input.split(" ")[1]
 
-    const fileContent = readFileSync(fileName).toString()
+    const fileStream = createReadStream(fileName)
 
     openDataServer(
-      () => { client.write(input + "\r\n") },
+      () => {
+        client.write(input + "\r\n")
+      },
       (dataClient, onDone) => {
         console.log(`Sending ${fileName} to server...`)
 
-        dataClient.write(fileContent, onDone)
-        dataClient.end()
+        fileStream.on('data', (chunk) => {
+          dataClient.write(chunk)
+        })
+        fileStream.on('close', () => {
+          onDone()
+        })
       },
     )
   } else if (input.startsWith("RETR ")) {
@@ -104,8 +112,12 @@ process.openStdin().addListener("data", (stdin) => {
     openDataServer(
       () => { client.write(input + "\r\n") },
       null,
-      (_, data, __) => { writeStream.write(data) },
-      () => { writeStream.end() }
+      (_, data, __) => {
+        writeStream.write(data)
+      },
+      () => {
+        writeStream.end()
+      }
     )
   } else {
     client.write(input + "\r\n")

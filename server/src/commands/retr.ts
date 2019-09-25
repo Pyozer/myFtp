@@ -8,7 +8,7 @@ export default new Command('RETR', true, (arg, socketInfo) => {
     );
 
     socketInfo.dataTransfert((dataSocket, done) => {
-        readStream.on('data', (chunk: Buffer) => dataSocket.write(chunk.toString()))
+        readStream.on('data', (chunk: Buffer) => dataSocket.write(chunk))
         readStream.on('close', done)
     })
 })

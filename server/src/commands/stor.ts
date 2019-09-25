@@ -9,7 +9,12 @@ export default new Command('STOR', true, (arg, socketInfo) => {
 
     socketInfo.dataTransfert(
         null,
-        (data, done) => { writeStream.write(data) },
-        (done) => done(),
+        data => {
+            writeStream.write(data)
+        },
+        done => {
+            writeStream.end()
+            done()
+        },
     )
 });
