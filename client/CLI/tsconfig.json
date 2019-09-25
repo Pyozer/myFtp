@@ -22,7 +22,6 @@
         "resolveJsonModule": true
     },
     "include": [
-      "src/**/*",
-      "../../server/node_modules/@types/node/globals.d.ts"
+      "src/**/*"
     ]
 }

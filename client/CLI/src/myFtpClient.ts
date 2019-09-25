@@ -1,56 +1,125 @@
-import { AddressInfo, createConnection, createServer } from 'net';
+import { createWriteStream, createReadStream } from "fs"
+import * as net from "net"
 
-if (process.argv.length < 4) throw "You must provide host and port in arguments !"
+if (process.argv.length < 4) { throw new Error("You must provide host and port in arguments !") }
 
 const HOST = process.argv[2]
-const PORT = parseInt(process.argv[3])
-let isSkipRes = 0;
+const PORT = parseInt(process.argv[3], 10)
+let isSkipRes = 0
 
-const openDataServer = (onConnect: () => void, onData: (data: String) => void) => {
-  let server = createServer(dataClient => {
-    dataClient.on('data', (data) => {
-      onData(data.toString())
+const openDataServer = (
+  onServerUp?: () => void,
+  onClientConnect?: (dataClient: net.Socket, onDone: () => void) => void,
+  onClientData?: (dataClient: net.Socket, data: string, onDone: () => void) => void,
+  onClientEnd?: () => void,
+) => {
+  const done = () => {
+    server.close()
+  }
+
+  const server = net.createServer((dataClient: net.Socket) => {
+    if (onClientConnect) {
+      onClientConnect(dataClient, () => {
+        dataClient.end()
+        done()
+      })
+    }
+
+    dataClient.on("data", (data: Buffer) => {
+      console.log(data.toString())
+
+      if (onClientData) {
+        onClientData(dataClient, data.toString(), () => {
+          dataClient.end()
+          done()
+        })
+      }
+    })
+
+    dataClient.on("end", () => {
+      if (onClientEnd) { onClientEnd() }
+      done()
     })
   })
+
   server.listen(() => {
-    let address = server.address() as AddressInfo
+    const address = server.address() as net.AddressInfo
     isSkipRes = 2
-    client.write(
-      `EPRT |2|${address.address}|${address.port}\r\n`,
-      () => setTimeout(onConnect, 100)
-    )
+    client.write(`EPRT |${address.family === "IPv6" ? 2 : 1}|${address.address}|${address.port}\r\n`)
+    client.once("data", (_) => {
+      if (onServerUp) { onServerUp() }
+    })
   })
 }
 
-const client = createConnection(PORT, HOST, () => {
-  console.log(`Connected to FTP Server "${HOST}:${PORT}"`);
+const client = net.createConnection(PORT, HOST, () => {
+  console.log(`Connected to FTP Server "${HOST}:${PORT}"`)
 })
 
-client.on('error', (err: Error) => { throw err })
-client.on('end', (err: Error) => { throw "Server disconnected :/" })
+client.on("error", (err: Error) => { throw err })
+client.on("end", (err: Error) => { throw new Error("Server disconnected :/") })
 
-client.on('data', (data: Buffer) => {
+client.on("data", (data: Buffer) => {
   const response = data.toString().trim()
   console.log(`Response: ${response}`)
 
-  if (isSkipRes == 0) {
+  const respCode = parseInt(response.substring(0, 3), 10)
+
+  if (isSkipRes > 0) { isSkipRes-- }
+  if (isSkipRes === 0 && respCode !== 150) {
     process.stdout.write("\nCommand: ")
-  } else {
-    isSkipRes--
   }
 })
 
-process.openStdin().addListener("data", (data) => {
-  const input = data.toString().trim()
+process.openStdin().addListener("data", (stdin) => {
+  const input = `${stdin}`.trim()
 
-  console.log(`Your input: ${input}`)
-
-  if (input == 'LIST') {
+  if (input === "LIST") {
     openDataServer(
-      () => { client.write("LIST\r\n") },
-      (data) => { console.log(data) }
+      () => {
+        client.write("LIST\r\n")
+      },
+      null,
+      (_, __, onDone) => {
+        onDone()
+      },
+    )
+  } else if (input.startsWith("STOR ")) {
+    const fileName = input.split(" ")[1]
+
+    const fileStream = createReadStream(fileName)
+
+    openDataServer(
+      () => {
+        client.write(input + "\r\n")
+      },
+      (dataClient, onDone) => {
+        console.log(`Sending ${fileName} to server...`)
+
+        fileStream.on('data', (chunk) => {
+          dataClient.write(chunk)
+        })
+        fileStream.on('close', () => {
+          onDone()
+        })
+      },
+    )
+  } else if (input.startsWith("RETR ")) {
+    const fileName = input.split(" ")[1]
+
+    const writeStream = createWriteStream(fileName)
+
+    openDataServer(
+      () => { client.write(input + "\r\n") },
+      null,
+      (_, data, __) => {
+        writeStream.write(data)
+      },
+      () => {
+        writeStream.end()
+      }
     )
   } else {
-    client.write(data)
+    client.write(input + "\r\n")
   }
 })
