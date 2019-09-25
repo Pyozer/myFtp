@@ -1,4 +1,4 @@
-import { createConnection, createServer, AddressInfo, Socket } from 'net'
+import { AddressInfo, createConnection, createServer } from 'net';
 
 if (process.argv.length < 4) throw "You must provide host and port in arguments !"
 
