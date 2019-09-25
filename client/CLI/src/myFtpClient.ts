@@ -1,5 +1,5 @@
 import { createConnection, createServer, AddressInfo, Socket } from 'net'
-import { createReadStream, readFileSync, createWriteStream, write } from 'fs';
+import { readFileSync, createWriteStream } from 'fs';
 
 if (process.argv.length < 4) throw "You must provide host and port in arguments !"
 
