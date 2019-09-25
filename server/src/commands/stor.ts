@@ -7,8 +7,9 @@ export default new Command('STOR', true, (arg, socketInfo) => {
         path.join(socketInfo.currPath, arg)
     );
 
-    socketInfo.dataTransfert(null, (data, done) => {
-        writeStream.write(data)
-        done()
-    })
+    socketInfo.dataTransfert(
+        null,
+        (data, done) => { writeStream.write(data) },
+        (done) => done(),
+    )
 });

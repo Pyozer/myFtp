@@ -49,6 +49,7 @@ export default class SocketInfo {
         onData?: (data: Buffer, onDone: () => void) => void,
         onEnd?: (onDone: () => void) => void
     ) {
+        this.reply(150)
         let dataSocket = createConnection(this.port, this.host)
 
         const done = () => {
@@ -56,10 +57,10 @@ export default class SocketInfo {
         }
 
         dataSocket.on('connect', () => {
-            this.reply(150, null, () => {
-                if (onConnect) onConnect(dataSocket, done)
-            })
+            if (onConnect) onConnect(dataSocket, done)
         }).on('data', data => {
+            console.log(data);
+
             if (onData) onData(data, done)
         }).on('end', () => {
             if (onEnd) onEnd(done)
