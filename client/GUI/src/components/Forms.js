@@ -11,8 +11,6 @@ import {
     InputLabel,
 } from '@material-ui/core';
 import styled from "styled-components"
-import * as net from 'net'
-
 
 export default function Forms() {
     const [host, setHost] = useState("10.3..146");
@@ -21,7 +19,8 @@ export default function Forms() {
     const [password, setPassword] = useState("admin");
     const handleSubmit = (event) => {
         event.preventDefault();
-        const client = new net.Socket();
+        //  const client = new net.Socket();
+        const client = new client();
         client.connect({port: parseInt(port), host}, (data) => {
             alert(data);
         }).on("error", (err) => {
